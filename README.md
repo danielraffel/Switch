@@ -1,9 +1,11 @@
-# gSwitcher: Google Cloud Configuration Management Tool
+# Switch: Google Cloud Configuration Management Tool
 
-gSwitcher is a macOS bash script that simplifies the management of multiple Google Cloud configurations by enabling the creation of user-friendly shortcuts. It facilitates easy switching between various Google Cloud accounts and projects through straightforward command shortcuts. While the gcloud CLI offers similar functionality, this script streamlines the process, making it more memorable and helping you confirm the configuration switch, particularly useful for individuals handling multiple Google accounts for various services, such as managing numerous GCP services hosted across unique google accounts.
+Switch is a macOS bash script that simplifies the management of multiple Google Cloud configurations by enabling the creation of user-friendly shortcuts. It facilitates easy switching between various Google Cloud accounts and projects through straightforward command shortcuts. While the gcloud CLI offers similar functionality, this script streamlines the process, making it more memorable and helping you confirm the configuration switch, particularly useful for individuals handling multiple Google accounts for various services, such as managing numerous GCP services hosted across unique google accounts.
 
 ## Supported Platform
 - macOS
+
+## Pre-requisites
 
 ## Features
 - Create, update, and remove shortcuts for Google Cloud configurations.
@@ -11,9 +13,15 @@ gSwitcher is a macOS bash script that simplifies the management of multiple Goog
 - Execute shortcuts to quickly switch between Google Cloud configurations.
 
 ## Installation
-1. Clone or download the `gSwitcher.sh` script to your local machine.
-2. Ensure the script is executable: `chmod +x /path/to/gSwitcher.sh`
-3. Optionally, add an alias in your `.bashrc` or `.zshrc`: `alias switch='/path/to/gSwitcher.sh'`
+1. Clone the repo `git clone https://github.com/danielraffel/switch.git` on your local machine.
+2. Change directories `cd switch`
+3. Ensure the script is executable: `chmod +x switch.sh`
+4. Run the following command to change the ownership of the script and make it executable without sudo:
+```
+sudo chown $USER switch.sh
+chmod +x switch.sh
+```
+5. Optionally, add an alias in your `.bashrc` or `.zshrc`: `alias switch='/path/to/switch.sh'`
 
 ## Usage
 - To create a new shortcut: `switch create [shortcut_name]`
@@ -39,10 +47,10 @@ gSwitcher is a macOS bash script that simplifies the management of multiple Goog
 `switch myShortcut`
 
 ## Removal of gSwitcher
-To completely remove gSwitcher from your system:
-1. Delete the `gSwitcher.sh` script.
+To completely remove switch from your system:
+1. Delete the `switch.sh` script.
 2. Remove the related alias from `.bashrc` or `.zshrc`.
-3. Optionally, remove the `gswitcher` directory from `/usr/local/bin` if no longer needed.
+3. Optionally, remove the `switch` directory from `/usr/local/bin` if no longer needed.
 
 ## Note
 This script is specifically designed for managing Google Cloud configurations on macOS. Please ensure you have the necessary permissions to modify `/usr/local/bin` and other system directories.
