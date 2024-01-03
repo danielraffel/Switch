@@ -6,13 +6,14 @@ Switch is a macOS bash script that simplifies the management of multiple Google 
 - macOS
 
 ## Pre-requisites
-1. Before creating a profile auth the account you want to switch to in the [Google CLI](https://cloud.google.com/sdk/gcloud#download_and_install_the)
+1. Before creating a profile auth the google account you want to switch to in the [Google CLI](https://cloud.google.com/sdk/gcloud#download_and_install_the)
 ```
 gcloud auth login
 ```
 Note: This will open a web browser window where you can sign in with your Google account.
 Once you've signed in, you'll be redirected back to the terminal and your new account will be authorized for use with gcloud
-2. Get your Property ID available at the [Google Cloud Console](http://console.cloud.google.com)
+
+2. Get your Property ID for the google account you want to switch to at the [Google Cloud Console](http://console.cloud.google.com)
  
 ## Features
 - Create, update, and remove shortcuts for Google Cloud configurations.
