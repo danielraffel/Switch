@@ -15,13 +15,18 @@ Switch is a macOS bash script that simplifies the management of multiple Google 
 ## Installation
 1. Clone the repo `git clone https://github.com/danielraffel/switch.git` on your local machine.
 2. Change directories `cd switch`
-3. Ensure the script is executable: `chmod +x switch.sh`
-4. Run the following command to change the ownership of the script and make it executable without sudo:
+3. Rename and move the script to use switch as a global command `sudo cp switch.sh /usr/local/bin/switch`
+4. Ensure the script is executable: `sudo chmod +x /usr/local/bin/switch`
+5. Update the PATH in ~/.bashrc and/or ~/.zshrc profile
 ```
-sudo chown $USER switch.sh
-chmod +x switch.sh
+echo 'export PATH="/usr/local/bin:$PATH"' | cat - ~/.bashrc > temp && mv temp ~/.bashrc
+echo 'export PATH="/usr/local/bin:$PATH"' | cat - ~/.zshrc > temp && mv temp ~/.zshrc
 ```
-5. Optionally, add an alias in your `.bashrc` or `.zshrc`: `alias switch='/path/to/switch.sh'`
+6. Reload the configurations
+```
+source ~/.bashrc
+source ~/.zshrc
+```
 
 ## Usage
 - To create a new shortcut: `switch create [shortcut_name]`
@@ -46,11 +51,13 @@ chmod +x switch.sh
 #### Execute a shortcut
 `switch myShortcut`
 
-## Removal of gSwitcher
+## How to Remove Everything Switch Installed
 To completely remove switch from your system:
-1. Delete the `switch.sh` script.
-2. Remove the related alias from `.bashrc` or `.zshrc`.
-3. Optionally, remove the `switch` directory from `/usr/local/bin` if no longer needed.
+1. Delete the script you copied `/usr/local/bin/switch`.
+2. Delete the repo you cloned `/path/to/switch`.
+3. Remove the PATH `export PATH="/usr/local/bin:$PATH"` from `.bashrc` and/or `.zshrc`.
+4. Remove the file `~/.switch_config` with your configurations
+5. Remove the directory `~/.switch_shortcuts` with your shortcuts
 
 ## Note
 This script is specifically designed for managing Google Cloud configurations on macOS. Please ensure you have the necessary permissions to modify `/usr/local/bin` and other system directories.
