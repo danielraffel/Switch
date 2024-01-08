@@ -13,18 +13,30 @@ gcloud auth login
 Note: This will open a web browser window where you can sign in with your Google account.
 Once you've signed in, you'll be redirected back to the terminal and your new account will be authorized for use with gcloud
 
-2. Get your Property ID for the google account you want to switch to at the [Google Cloud Console](http://console.cloud.google.com)
+2. Get your [Project ID](https://support.google.com/googleapi/answer/7014113?hl=en) for the Google account you want to switch to in the [Google Cloud Console](http://console.cloud.google.com)
  
 ## Features
-- Create, update, and remove shortcuts for Google Cloud configurations.
-- Display information about all configured shortcuts.
-- Execute shortcuts to quickly switch between Google Cloud configurations.
+- Create, update, and remove shortcuts for Google Cloud configurations associated with your Google accounts.
+- Display information about all configured shortcuts (and any you switch to.)
+- Execute shortcuts to quickly switch between Google Cloud configurations associated with your Google accounts.
 
 ## Installation
-1. Clone the repo `git clone https://github.com/danielraffel/switch.git` on your local machine.
-2. Change directories `cd switch`
-3. Rename and move the script to use switch as a global command `sudo cp switch.sh /usr/local/bin/switch`
-4. Ensure the script is executable: `sudo chmod +x /usr/local/bin/switch`
+1. Clone the repo on your local machine
+```
+git clone https://github.com/danielraffel/switch.git
+``` 
+2. Change directories
+```
+cd switch
+```
+3. Rename and move the script to use switch as a global command
+```
+sudo cp switch.sh /usr/local/bin/switch
+```
+4. Ensure the script is executable
+```
+sudo chmod +x /usr/local/bin/switch
+```
 5. Update the PATH in ~/.bashrc and/or ~/.zshrc profile
 ```
 echo 'export PATH="/usr/local/bin:$PATH"' | cat - ~/.bashrc > temp && mv temp ~/.bashrc
@@ -36,36 +48,61 @@ source ~/.bashrc
 source ~/.zshrc
 ```
 
-## Usage
-- To create a new shortcut: `switch create [shortcut_name]`
-- To update an existing shortcut: `switch update [shortcut_name]`
-- To remove a shortcut: `switch remove [shortcut_name]`
-- To display information about all shortcuts: `switch info`
-- To execute a shortcut: `switch [shortcut_name]`
+## Why Use Switch?
+### Before Switch
+Switching between multiple Google Cloud accounts and projects typically required a series of `gcloud` commands:
+```
+gcloud config set account $account
+gcloud config set project $project
+gcloud config get-value account
+gcloud config get-value project
+```
+This process was not only time-consuming but also prone to errors, especially when recalling specific account and project details.
 
-### Example
-#### Create a new shortcut
+### After Switch
+With `switch`, you can create a memorable shortcut for your Google Cloud configuration:
+```
+switch create myShortcut
+```
+Executing the shortcut:
+```
+switch myShortcut
+```
+This not only handles all the necessary commands but also provides a description of the projects running on that account, which can be updated anytime. It turns a multi-step process into a simple one-command action, ensuring you are always in the right account with the right configuration. Given that I frequently don't touch some infra for months at a time this can be very handy when I want to access resources at the command line.
+
+## How To Use Switch
+### Create a new shortcut
+This will allow you to create a custom shortcut associated with a Google Cloud account/project you want to switch to at the command line.
+
 `switch create myShortcut`
 
-#### Update an existing shortcut
-`switch update myShortcut`
+### Execute a shortcut
+This will allow you to switch to the account/project associated with your custom shortcut.
 
-#### Remove a shortcut
-`switch remove myShortcut`
-
-#### Display information about all shortcuts
-`switch info`
-
-#### Execute a shortcut
 `switch myShortcut`
 
-## How to Remove Everything Switch Installed
+### Update an existing shortcut
+This will allow you to update the description (of what's running on GCP) associated with this shortcut.
+
+`switch update myShortcut`
+
+### Display information about all shortcuts
+This will display all the custom shortcuts you've created along with their respective email addresses, property ID and descriptions associated with them.
+
+`switch info`
+
+### Remove a shortcut
+This will allow you to delete a specific custom shortcut you've created.
+
+`switch remove myShortcut`
+
+## How to Manually Remove Everything Switch Installed
 To completely remove switch from your system:
-1. Delete the script you copied `/usr/local/bin/switch`.
-2. Delete the repo you cloned `/path/to/switch`.
-3. Remove the PATH `export PATH="/usr/local/bin:$PATH"` from `.bashrc` and/or `.zshrc`.
-4. Remove the file `~/.switch_config` with your configurations
-5. Remove the directory `~/.switch_shortcuts` with your shortcuts
+1. Delete the script you copied `/usr/local/bin/switch`
+2. Delete the repo you cloned `/path/to/switch`
+3. Remove the PATH `export PATH="/usr/local/bin:$PATH"` from `.bashrc` and/or `.zshrc`
+4. Remove the file with your configurations `~/.switch_config`
+5. Remove the directory with your shortcuts `~/.switch_shortcuts`
 
 ## Note
-This script is specifically designed for managing Google Cloud configurations on macOS. Please ensure you have the necessary permissions to modify `/usr/local/bin` and other system directories.
+This script is specifically designed for managing Google Cloud configurations on macOS. It should be trivial to adapt to other platforms. Please ensure you have the necessary permissions to modify `/usr/local/bin` and other system directories.
