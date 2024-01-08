@@ -60,41 +60,46 @@ gcloud config get-value project
 This process was not only time-consuming but also prone to errors, especially when recalling specific account and project details.
 
 ### After Switch
-With `switch`, you can create a memorable shortcut for your Google Cloud configuration:
+[One Time Process] Create a memorable shortcut for your Google Cloud configuration:
 ```
 switch create myShortcut
 ```
-Executing the shortcut:
+Execute the shortcut:
 ```
 switch myShortcut
 ```
-This not only handles all the necessary commands but also provides a description of the projects running on that account, which can be updated anytime. It turns a multi-step process into a simple one-command action, ensuring you are always in the right account with the right configuration. Given that I frequently don't touch some infra for months at a time this can be very handy when I want to access resources at the command line.
+This not only handles all the necessary commands but also provides a description of the projects running on that account, which can be updated anytime. It turns a multi-step gCloud process into a simple one-command action, ensuring you are always in the right account with the right configuration. **Given that I frequently don't touch some infra for months at a time this is very handy when I need to access resources at the command line.**
 
 ## How To Use Switch
 ### Create a new shortcut
 This will allow you to create a custom shortcut associated with a Google Cloud account/project you want to switch to at the command line.
-
-`switch create myShortcut`
+```
+switch create myShortcut
+```
 
 ### Execute a shortcut
 This will allow you to switch to the account/project associated with your custom shortcut.
-
-`switch myShortcut`
+```
+switch myShortcut
+```
 
 ### Update an existing shortcut
 This will allow you to update the description (of what's running on GCP) associated with this shortcut.
-
-`switch update myShortcut`
+```
+switch update myShortcut
+```
 
 ### Display information about all shortcuts
 This will display all the custom shortcuts you've created along with their respective email addresses, property ID and descriptions associated with them.
-
-`switch info`
+```
+switch info
+```
 
 ### Remove a shortcut
 This will allow you to delete a specific custom shortcut you've created.
-
-`switch remove myShortcut`
+```
+switch remove myShortcut
+```
 
 ## How to Manually Remove Everything Switch Installed
 To completely remove switch from your system:
