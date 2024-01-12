@@ -98,33 +98,31 @@ switch info
 ```
 
 ### Manage SSH Commands
-- Create an SSH command for a shortcut:
-  ```
-  switch ssh create myShortcut
-  ```
-- Execute an SSH command associated with a shortcut:
-  ```
-  switch ssh myShortcut
-  ```
-- Remove an SSH command associated with a shortcut:
-  ```
-  switch ssh remove myShortcut
-  ```
+Create a new SSH command for a shortcut:
+```
+switch ssh create myShortcut
+```
+Execute an existing SSH command associated with a shortcut:
+```
+switch ssh myShortcut
+```
+Remove an existing SSH command associated with a shortcut:
+```
+switch ssh remove myShortcut
+```
 
 ### Export/Import Configuration
-- Export the current configuration:
-  ```
-  switch export [optional_path]
-  ```
-- Import configuration from a specified file:
-  ```
-  switch import [path_to_config_file]
-  ```
+Export the current configuration:
+```
+switch export [optional_path]
+```
+Import configuration from a specified file:
+```
+switch import [path_to_config_file]
+```
 
 ### Remove a shortcut
-This will allow you
-
- to delete a specific custom shortcut you've created.
+This will allow you to delete a specific custom shortcut you've created.
 ```
 switch remove myShortcut
 ```
