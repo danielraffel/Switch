@@ -112,13 +112,13 @@ switch ssh remove myShortcut
 ```
 
 ### Export/Import Configuration
-Export the current configuration:
+Export the current configuration by giving it a name:
 ```
-switch export [optional_path]
+switch export /path/to/name_your_config_filename
 ```
 Import configuration from a specified file:
 ```
-switch import [path_to_config_file]
+switch import /path/to/your_config_filename
 ```
 
 ### Remove a shortcut
