@@ -17,8 +17,10 @@ Once you've signed in, you'll be redirected back to the terminal and your new ac
  
 ## Features
 - Create, update, and remove shortcuts for Google Cloud configurations associated with your Google accounts.
-- Display information about all configured shortcuts (and any you switch to.)
+- Display information about all configured shortcuts, including an asterisk (*) next to the currently active shortcut.
 - Execute shortcuts to quickly switch between Google Cloud configurations associated with your Google accounts.
+- Manage SSH commands for each shortcut, allowing easy SSH access to VMs associated with each shortcut.
+- Export and import Switch configurations, making the setup portable across different machines.
 
 ## Installation
 1. Clone the repo on your local machine
@@ -39,8 +41,8 @@ sudo chmod +x /usr/local/bin/switch
 ```
 5. Update the PATH in ~/.bashrc and/or ~/.zshrc profile
 ```
-echo 'export PATH="/usr/local/bin:$PATH"' | cat - ~/.bashrc > temp && mv temp ~/.bashrc
-echo 'export PATH="/usr/local/bin:$PATH"' | cat - ~/.zshrc > temp && mv temp ~/.zshrc
+echo 'export PATH="/usr/local/bin:$PATH"' | cat - ~/.bashrc > temp and mv temp ~/.bashrc
+echo 'export PATH="/usr/local/bin:$PATH"' | cat - ~/.zshrc > temp and mv temp ~/.zshrc
 ```
 6. Reload the configurations
 ```
@@ -90,13 +92,39 @@ switch update myShortcut
 ```
 
 ### Display information about all shortcuts
-This will display all the custom shortcuts you've created along with their respective email addresses, property ID and descriptions associated with them.
+This will display all the custom shortcuts you've created along with their respective email addresses, property ID and descriptions associated with them. An asterisk (*) is shown next to the currently active shortcut.
 ```
 switch info
 ```
 
+### Manage SSH Commands
+- Create an SSH command for a shortcut:
+  ```
+  switch ssh create myShortcut
+  ```
+- Execute an SSH command associated with a shortcut:
+  ```
+  switch ssh myShortcut
+  ```
+- Remove an SSH command associated with a shortcut:
+  ```
+  switch ssh remove myShortcut
+  ```
+
+### Export/Import Configuration
+- Export the current configuration:
+  ```
+  switch export [optional_path]
+  ```
+- Import configuration from a specified file:
+  ```
+  switch import [path_to_config_file]
+  ```
+
 ### Remove a shortcut
-This will allow you to delete a specific custom shortcut you've created.
+This will allow you
+
+ to delete a specific custom shortcut you've created.
 ```
 switch remove myShortcut
 ```
