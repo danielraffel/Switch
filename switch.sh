@@ -6,9 +6,13 @@ SHORTCUT_DIR="$HOME/.switch_shortcuts"
 # Path to store the configuration details
 CONFIG_FILE="$HOME/.switch_config"
 
-# Ensure the configuration file and shortcut directory exist
+# Path to store SSH commands
+SSH_CONFIG_FILE="$HOME/.switch_ssh_config"
+
+# Ensure the configuration file, SSH config, and shortcut directory exist
 mkdir -p "$SHORTCUT_DIR"
 touch "$CONFIG_FILE"
+touch "$SSH_CONFIG_FILE"
 
 # Function to add the shortcut directory to PATH if not already present
 add_to_path() {
@@ -151,11 +155,63 @@ remove_shortcut() {
     fi
 }
 
-# Function to display information about all shortcuts
+# Function to manage SSH commands
+manage_ssh() {
+    local action=$1
+    local shortcut_name=$2
+
+    case "$action" in
+        create)
+            echo "Enter SSH command for $shortcut_name:"
+            read ssh_command
+            echo "$shortcut_name:$ssh_command" >> "$SSH_CONFIG_FILE"
+            echo "SSH command added for $shortcut_name."
+            ;;
+        remove)
+            sed -i '' "/^$shortcut_name:/d" "$SSH_CONFIG_FILE"
+            echo "SSH command removed for $shortcut_name."
+            ;;
+        *)
+            local ssh_command=$(grep "^$shortcut_name:" "$SSH_CONFIG_FILE" | cut -d ':' -f 2)
+            if [[ ! -z "$ssh_command" ]]; then
+                eval "$ssh_command"
+            else
+                echo "No SSH command found for $shortcut_name."
+            fi
+            ;;
+    esac
+}
+
+# Function to export configuration
+export_config() {
+    local export_path=${1:-$PWD/switch_export.tar.gz}
+    tar -czf "$export_path" "$CONFIG_FILE" "$SSH_CONFIG_FILE"
+    echo "Configuration exported to $export_path"
+}
+
+# Function to import configuration
+import_config() {
+    local import_path=$1
+    tar -xzf "$import_path" -C "$HOME"
+    echo "Configuration imported from $import_path"
+}
+
+# Enhanced display_info function
 display_info() {
+    local current_shortcut_path=$(readlink "$SHORTCUT_DIR/current")
+    local current_shortcut=""
+
+    if [[ -n "$current_shortcut_path" && -f "$current_shortcut_path" ]]; then
+        current_shortcut=$(basename "$current_shortcut_path")
+    fi
+
     echo "Configured Shortcuts:"
     while IFS=':' read -r name account project description; do
-        echo "- $name: $account, $project, $description"
+        local indicator=" "
+        if [[ "$name" == "$current_shortcut" ]]; then
+            indicator="*"
+        fi
+        printf "%s %s: %s, %s, %s\n" "$indicator" "$name" "$account" "$project" "$description"
     done < "$CONFIG_FILE"
 }
 
@@ -173,6 +229,9 @@ execute_shortcut() {
     if [[ -x "$SHORTCUT_DIR/$shortcut_name" ]]; then
         "$SHORTCUT_DIR/$shortcut_name"
 
+        # Create/Update the symbolic link for the current shortcut
+        ln -sf "$SHORTCUT_DIR/$shortcut_name" "$SHORTCUT_DIR/current"
+
         # Extract and print the description
         local description=$(grep "^$shortcut_name:" "$CONFIG_FILE" | cut -d ':' -f 4)
         if [[ ! -z "$description" ]]; then
@@ -183,8 +242,17 @@ execute_shortcut() {
     fi
 }
 
-# Main logic
+# Extend main logic to handle new features
 case "$1" in
+    ssh)
+        manage_ssh "$2" "$3"
+        ;;
+    export)
+        export_config "$2"
+        ;;
+    import)
+        import_config "$2"
+        ;;
     create)
         create_shortcut "$2"
         ;;
