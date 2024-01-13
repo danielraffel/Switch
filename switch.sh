@@ -33,16 +33,15 @@ add_to_path
 
 # Function to display help
 display_help() {
-    echo "Switch - Google Cloud Configuration Management"
+    echo "Switch - Quickly Change Google Cloud Configurations"
     echo "Usage: "
     echo "  switch create [name] - Create a new shortcut"
     echo "  switch update [name] - Update an existing shortcut"
     echo "  switch remove [name] - Remove an existing shortcut"
-    echo "  switch info - Display information about all shortcuts"
+    echo "  switch info - Display information about all shortcuts (active shortcut is marked with an asterisk)"
     echo "  switch [name] - Activate the specified shortcut"
-    echo "  switch add [SSH command] - Add an SSH command to the current shortcut"
-    echo "  switch remove - Remove the SSH command from the current shortcut"
-    echo "  Example: switch add ssh user@example.com"
+    echo "  switch add [SSH command] - Add an SSH command to the current active shortcut"
+    echo "  switch remove - Remove the SSH command from the current active shortcut"
 }
 
 # Function to prompt for user input and confirm before continuing
