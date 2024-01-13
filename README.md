@@ -92,23 +92,23 @@ switch update myShortcut
 ```
 
 ### Display information about all shortcuts
-This will display all the custom shortcuts you've created along with their respective email addresses, property ID and descriptions associated with them. An asterisk (*) is shown next to the currently active shortcut.
+This will display all the custom shortcuts you've created along with their respective email addresses, property ID, descriptions associated with them and any ssh command you might have added. An asterisk (*) is shown next to the currently active shortcut.
 ```
 switch info
 ```
 
 ### Manage SSH Commands
-Create a new SSH command for a shortcut:
+Add an SSH command to the current active shortcut:
 ```
-switch ssh create myShortcut
+switch add ssh user@example.com
 ```
-Execute an existing SSH command associated with a shortcut:
+Execute the SSH command associated with the current active shortcut:
 ```
-switch ssh myShortcut
+switch ssh
 ```
-Remove an existing SSH command associated with a shortcut:
+Remove the SSH command from the current active shortcut:
 ```
-switch ssh remove myShortcut
+switch remove
 ```
 
 ### Export/Import Configuration
