@@ -92,43 +92,43 @@ switch info
 ```
 
 ### Update the description of an existing shortcut
-This will allow you to update the description (of what's running on GCP) associated with this shortcut.
+This will allow you to update the description (of what's running on GCP) associated with this shortcut. It helps quickly grok what's running on that account.
 ```
 switch update myShortcut
 ```
 
 ### Display Help
-This will allow you to learn about all the commands switch supports and how they work.
+This will allow you to learn about all the commands switch supports.
 ```
 switch help
 ```
 
 ### Manage SSH Commands
-Add an SSH command to the current active shortcut:
+Add an SSH command to the current active shortcut so you can use it later to SSH in quickly.
 ```
 switch add ssh user@example.com
 ```
-Execute the SSH command associated with the current active shortcut:
+Execute the SSH command associated with the current active shortcut so you can SSH in quickly.
 ```
 switch ssh
 ```
-Remove the SSH command from the current active shortcut:
+Remove the SSH command from the current active shortcut.
 ```
 switch remove
 ```
 
 ### Export/Import Configuration
-Export the current configuration by giving it a name:
+Export the current configuration by giving it a name.
 ```
 switch export /path/to/name_your_config_filename
 ```
-Import configuration from a specified file:
+Import configuration from a specified file.
 ```
 switch import /path/to/your_config_filename
 ```
 
 ### Remove a shortcut
-This will allow you to delete a specific custom shortcut you've created.
+This will allow you to delete a custom shortcut you've created.
 ```
 switch remove myShortcut
 ```
