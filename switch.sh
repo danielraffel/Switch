@@ -40,6 +40,8 @@ display_help() {
     echo "  switch remove [name] - Remove an existing shortcut"
     echo "  switch info - Display information about all shortcuts"
     echo "  switch [name] - Activate the specified shortcut"
+    echo "  switch add ssh [command] - Add an SSH command to a shortcut"
+    echo "  switch remove ssh [shortcut_name] - Remove an SSH command from a shortcut"
 }
 
 # Function to prompt for user input and confirm before continuing
@@ -159,19 +161,32 @@ remove_shortcut() {
 manage_ssh() {
     local action=$1
     local shortcut_name=$2
+    local ssh_command=$3
 
     case "$action" in
-        create)
-            echo "Enter SSH command for $shortcut_name:"
-            read ssh_command
-            echo "$shortcut_name:$ssh_command" >> "$SSH_CONFIG_FILE"
-            echo "SSH command added for $shortcut_name."
+        add)
+            if grep -q "^$shortcut_name:" "$SSH_CONFIG_FILE"; then
+                echo "An SSH command already exists for $shortcut_name. Please remove it first."
+                return
+            fi
+            echo "Do you want to add '$ssh_command' to $shortcut_name? (yes/no)"
+            read confirmation
+            if [[ "$confirmation" == "yes" ]]; then
+                echo "$shortcut_name:$ssh_command" >> "$SSH_CONFIG_FILE"
+                echo "SSH command added for $shortcut_name."
+            else
+                echo "Process cancelled."
+            fi
             ;;
         remove)
-            sed -i '' "/^$shortcut_name:/d" "$SSH_CONFIG_FILE"
-            echo "SSH command removed for $shortcut_name."
+            if grep -q "^$shortcut_name:" "$SSH_CONFIG_FILE"; then
+                sed -i "/^$shortcut_name:/d" "$SSH_CONFIG_FILE"
+                echo "SSH command removed for $shortcut_name."
+            else
+                echo "No SSH command found for $shortcut_name."
+            fi
             ;;
-        *)
+        execute)
             local ssh_command=$(grep "^$shortcut_name:" "$SSH_CONFIG_FILE" | cut -d ':' -f 2)
             if [[ ! -z "$ssh_command" ]]; then
                 eval "$ssh_command"
@@ -200,18 +215,37 @@ import_config() {
 display_info() {
     local current_shortcut_path=$(readlink "$SHORTCUT_DIR/current")
     local current_shortcut=""
+    local line=""
+    local max_desc_length=24  # Maximum length of the description
+    local format="%-15s | %-18s | %-22s | %-24s | %-28s\n"  # Adjusted widths for columns
 
     if [[ -n "$current_shortcut_path" && -f "$current_shortcut_path" ]]; then
         current_shortcut=$(basename "$current_shortcut_path")
     fi
 
-    echo "Configured Shortcuts:"
+    # Print the header
+    printf "$format" "Shortcut" "Gmail User" "Project ID" "Description" "SSH Command"
+    printf '%0.s-' {1..160}
+    echo
+
     while IFS=':' read -r name account project description; do
+        ssh_command=$(grep "^$name:" "$SSH_CONFIG_FILE" | cut -d ':' -f 2)
+        ssh_command=${ssh_command:-""}
+        
+        # Truncate the description if it's longer than the maximum length
+        if [ "${#description}" -gt "$max_desc_length" ]; then
+            description="${description:0:$max_desc_length-3}..."
+        fi
+        
+        # Remove @gmail.com from the email address
+        account=${account%@gmail.com}
+        
         local indicator=" "
         if [[ "$name" == "$current_shortcut" ]]; then
             indicator="*"
         fi
-        printf "%s %s: %s, %s, %s\n" "$indicator" "$name" "$account" "$project" "$description"
+        
+        printf "$format" "$indicator$name" "$account" "$project" "$description" "$ssh_command"
     done < "$CONFIG_FILE"
 }
 
@@ -237,6 +271,13 @@ execute_shortcut() {
         if [[ ! -z "$description" ]]; then
             echo "Your setup is: $description"
         fi
+
+        # Execute SSH command if it exists
+        local ssh_command=$(grep "^$shortcut_name:" "$SSH_CONFIG_FILE" | cut -d ':' -f 2)
+        if [[ ! -z "$ssh_command" ]]; then
+            echo "Executing SSH command for $shortcut_name..."
+            eval "$ssh_command"
+        fi
     else
         echo "Shortcut '$shortcut_name' does not exist or is not executable."
     fi
@@ -244,8 +285,22 @@ execute_shortcut() {
 
 # Extend main logic to handle new features
 case "$1" in
+    add)
+        if [[ "$2" == "ssh" ]]; then
+            manage_ssh add "$3" "${@:4}"
+        else
+            echo "Unsupported action. Try 'switch help' for more information."
+        fi
+        ;;
+    remove)
+        if [[ "$2" == "ssh" ]]; then
+            manage_ssh remove "$3"
+        else
+            remove_shortcut "$2"
+        fi
+        ;;
     ssh)
-        manage_ssh "$2" "$3"
+        manage_ssh execute "$2"
         ;;
     export)
         export_config "$2"
@@ -258,9 +313,6 @@ case "$1" in
         ;;
     update)
         update_shortcut "$2"
-        ;;
-    remove)
-        remove_shortcut "$2"
         ;;
     info)
         display_info
