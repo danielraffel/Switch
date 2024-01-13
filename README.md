@@ -85,16 +85,22 @@ This will allow you to switch to the account/project associated with your custom
 switch myShortcut
 ```
 
-### Update an existing shortcut
+### Display information about all shortcuts
+This will display all the custom shortcuts you've created along with their respective email addresses, property ID, descriptions associated with them and any ssh command you might have added. An asterisk (*) is shown next to the currently active shortcut.
+```
+switch info
+```
+
+### Update the description of an existing shortcut
 This will allow you to update the description (of what's running on GCP) associated with this shortcut.
 ```
 switch update myShortcut
 ```
 
-### Display information about all shortcuts
-This will display all the custom shortcuts you've created along with their respective email addresses, property ID, descriptions associated with them and any ssh command you might have added. An asterisk (*) is shown next to the currently active shortcut.
+### Display Help
+This will allow you to learn about all the commands switch supports and how they work.
 ```
-switch info
+switch help
 ```
 
 ### Manage SSH Commands
