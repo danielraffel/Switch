@@ -40,8 +40,9 @@ display_help() {
     echo "  switch remove [name] - Remove an existing shortcut"
     echo "  switch info - Display information about all shortcuts"
     echo "  switch [name] - Activate the specified shortcut"
-    echo "  switch add ssh [command] - Add an SSH command to a shortcut"
-    echo "  switch remove ssh [shortcut_name] - Remove an SSH command from a shortcut"
+    echo "  switch add [SSH command] - Add an SSH command to the current shortcut"
+    echo "  switch remove - Remove the SSH command from the current shortcut"
+    echo "  Example: switch add ssh user@example.com"
 }
 
 # Function to prompt for user input and confirm before continuing
@@ -161,7 +162,7 @@ remove_shortcut() {
 manage_ssh() {
     local action=$1
     local shortcut_name=$2
-    local ssh_command=$3
+    local ssh_command="${*:3}"  # Capture the entire SSH command as a single string
 
     case "$action" in
         add)
@@ -169,10 +170,11 @@ manage_ssh() {
                 echo "An SSH command already exists for $shortcut_name. Please remove it first."
                 return
             fi
-            echo "Do you want to add '$ssh_command' to $shortcut_name? (yes/no)"
+            # Corrected confirmation prompt to include 'ssh' and the complete command
+            echo "Do you want to add 'ssh $ssh_command' to $shortcut_name? (yes/no)"
             read confirmation
             if [[ "$confirmation" == "yes" ]]; then
-                echo "$shortcut_name:$ssh_command" >> "$SSH_CONFIG_FILE"
+                echo "$shortcut_name:ssh $ssh_command" >> "$SSH_CONFIG_FILE"
                 echo "SSH command added for $shortcut_name."
             else
                 echo "Process cancelled."
@@ -211,13 +213,13 @@ import_config() {
     echo "Configuration imported from $import_path"
 }
 
-# Enhanced display_info function
+# Function to display_info 
 display_info() {
     local current_shortcut_path=$(readlink "$SHORTCUT_DIR/current")
     local current_shortcut=""
-    local line=""
     local max_desc_length=24  # Maximum length of the description
-    local format="%-15s | %-18s | %-22s | %-24s | %-28s\n"  # Adjusted widths for columns
+    local max_ssh_length=20   # Maximum length of the SSH command
+    local format="%-16s | %-18s | %-22s | %-24s | %-20s\n"  # Adjusted widths for columns
 
     if [[ -n "$current_shortcut_path" && -f "$current_shortcut_path" ]]; then
         current_shortcut=$(basename "$current_shortcut_path")
@@ -225,26 +227,34 @@ display_info() {
 
     # Print the header
     printf "$format" "Shortcut" "Gmail User" "Project ID" "Description" "SSH Command"
-    printf '%0.s-' {1..160}
+    printf '%0.s-' {1..132}
     echo
 
     while IFS=':' read -r name account project description; do
-        ssh_command=$(grep "^$name:" "$SSH_CONFIG_FILE" | cut -d ':' -f 2)
-        ssh_command=${ssh_command:-""}
-        
+        local ssh_command=""
+        if grep -q "^$name:" "$SSH_CONFIG_FILE"; then
+            ssh_command=$(grep "^$name:" "$SSH_CONFIG_FILE" | cut -d ':' -f 2)
+        fi
+
         # Truncate the description if it's longer than the maximum length
         if [ "${#description}" -gt "$max_desc_length" ]; then
             description="${description:0:$max_desc_length-3}..."
         fi
-        
+
+        # Truncate the SSH command if it's longer than the maximum length
+        if [ "${#ssh_command}" -gt "$max_ssh_length" ]; then
+            ssh_command="${ssh_command:0:$max_ssh_length-3}..."
+        fi
+
         # Remove @gmail.com from the email address
         account=${account%@gmail.com}
         
-        local indicator=" "
+        local indicator="  "  # Two spaces by default
         if [[ "$name" == "$current_shortcut" ]]; then
-            indicator="*"
+            indicator="* "  # Asterisk with a space
         fi
         
+        # Print the formatted line
         printf "$format" "$indicator$name" "$account" "$project" "$description" "$ssh_command"
     done < "$CONFIG_FILE"
 }
@@ -283,20 +293,44 @@ execute_shortcut() {
     fi
 }
 
+# Function to get the current shortcut
+get_current_shortcut() {
+    local current_shortcut_path=$(readlink "$SHORTCUT_DIR/current")
+    if [[ -n "$current_shortcut_path" && -f "$current_shortcut_path" ]]; then
+        basename "$current_shortcut_path"
+    else
+        echo ""
+    fi
+}
+
+# Function to get the current shortcut
+get_current_shortcut() {
+    local current_shortcut_path=$(readlink "$SHORTCUT_DIR/current")
+    if [[ -n "$current_shortcut_path" && -f "$current_shortcut_path" ]]; then
+        basename "$current_shortcut_path"
+    else
+        echo ""
+    fi
+}
+
 # Extend main logic to handle new features
 case "$1" in
     add)
-        if [[ "$2" == "ssh" ]]; then
-            manage_ssh add "$3" "${@:4}"
+        current_shortcut=$(get_current_shortcut)
+        if [[ -z "$current_shortcut" ]]; then
+            echo "No active shortcut selected."
         else
-            echo "Unsupported action. Try 'switch help' for more information."
+            # Pass the active shortcut name and the entire SSH command as arguments
+            manage_ssh add "$current_shortcut" "ssh ${*:2}"
         fi
         ;;
     remove)
-        if [[ "$2" == "ssh" ]]; then
-            manage_ssh remove "$3"
+        current_shortcut=$(get_current_shortcut)
+        if [[ -z "$current_shortcut" ]]; then
+            echo "No active shortcut selected."
         else
-            remove_shortcut "$2"
+            # Remove the SSH command for the current shortcut
+            manage_ssh remove "$current_shortcut"
         fi
         ;;
     ssh)
