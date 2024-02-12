@@ -44,7 +44,7 @@ display_help() {
     echo "  switch remove - Remove the SSH command from the current active shortcut"
 }
 
-# Function to prompt for user input and confirm before continuing
+# Enhanced for flexible yes/no input
 prompt_for_input() {
     local input_var=$1
     local prompt_message=$2
@@ -55,9 +55,9 @@ prompt_for_input() {
         echo "You entered: ${!input_var}"
         read -p "Is this correct? (yes/no): " confirmation
         case $confirmation in
-            [Yy]* ) break;;
+            [Yy]* ) break;;  # Accepts y, Y, yes, Yes, etc.
             [Nn]* ) echo "Please enter the correct information.";;
-            * ) echo "Please answer 'yes' or 'no'.";;
+            * ) echo "Please answer yes or no.";;
         esac
     done
 }
@@ -100,7 +100,7 @@ create_shortcut() {
     echo "Shortcut '$shortcut_name' created successfully."
 }
 
-# Function to update an existing shortcut
+# Function to update an existing shortcut with the option to change the shortcut name
 update_shortcut() {
     local shortcut_name=$1
 
@@ -116,18 +116,55 @@ update_shortcut() {
         return
     fi
 
+    echo "Do you want to update the shortcut name from '$shortcut_name'? (yes/no)"
+    read update_name_confirm
+    if [[ "$update_name_confirm" =~ ^[Yy] ]]; then
+        while true; do
+            echo "What name do you want to update the shortcut to:"
+            read new_shortcut_name
+            echo "You entered: $new_shortcut_name"
+            echo "Is this correct? (yes/no)"
+            read confirm_new_name
+            if [[ "$confirm_new_name" =~ ^[Yy] ]]; then
+                if grep -q "^$new_shortcut_name:" "$CONFIG_FILE"; then
+                    echo "A shortcut with the name '$new_shortcut_name' already exists. Please choose a different name."
+                else
+                    # Rename in CONFIG_FILE and SSH_CONFIG_FILE if exists
+                    sed -i '' "s/^$shortcut_name:/$new_shortcut_name:/" "$CONFIG_FILE"
+                    if grep -q "^$shortcut_name:" "$SSH_CONFIG_FILE"; then
+                        sed -i '' "s/^$shortcut_name:/$new_shortcut_name:/" "$SSH_CONFIG_FILE"
+                    fi
+                    # Rename the shortcut script file
+                    mv "$SHORTCUT_DIR/$shortcut_name" "$SHORTCUT_DIR/$new_shortcut_name"
+                    shortcut_name=$new_shortcut_name
+                    echo "Shortcut name updated successfully."
+                    break
+                fi
+            elif [[ "$confirm_new_name" =~ ^[Nn] ]]; then
+                echo "Please enter the name again."
+            else
+                echo "Invalid response. Please answer 'yes' or 'no'."
+            fi
+        done
+    fi
+
+    # Proceed with other updates (Account, Project ID, Description)
     # Extract current account and project
     current_account=$(grep "^$shortcut_name:" "$CONFIG_FILE" | cut -d ':' -f 2)
     current_project=$(grep "^$shortcut_name:" "$CONFIG_FILE" | cut -d ':' -f 3)
 
+    echo "Current account: $current_account"
+    echo "Current project: $current_project"
+    # Optional: Prompt for updating account and project if needed
+
     # Request new description
     prompt_for_input new_description "Enter a new description for this setup: "
-
-    # Update the configuration file
+    # Update the configuration file with new details
     sed -i '' "s/^$shortcut_name:.*/$shortcut_name:$current_account:$current_project:$new_description/" "$CONFIG_FILE"
 
     echo "Shortcut '$shortcut_name' updated successfully."
 }
+
 
 # Function to remove an existing shortcut
 remove_shortcut() {
@@ -161,7 +198,7 @@ remove_shortcut() {
 manage_ssh() {
     local action=$1
     local shortcut_name=$2
-    local ssh_command="${*:3}"  # Capture the entire SSH command as a single string
+    local ssh_command
 
     case "$action" in
         add)
@@ -169,27 +206,18 @@ manage_ssh() {
                 echo "An SSH command already exists for $shortcut_name. Please remove it first."
                 return
             fi
-            # Corrected confirmation prompt to include 'ssh' and the complete command
-            echo "Do you want to add 'ssh $ssh_command' to $shortcut_name? (yes/no)"
-            read confirmation
-            if [[ "$confirmation" == "yes" ]]; then
-                echo "$shortcut_name:ssh $ssh_command" >> "$SSH_CONFIG_FILE"
-                echo "SSH command added for $shortcut_name."
-            else
-                echo "Process cancelled."
-            fi
+            ssh_command="${*:3}"  # Capture the entire SSH command as a single string
+            echo "$shortcut_name:$ssh_command" >> "$SSH_CONFIG_FILE"
+            echo "SSH command added for $shortcut_name."
             ;;
         remove)
-            if grep -q "^$shortcut_name:" "$SSH_CONFIG_FILE"; then
-                sed -i "/^$shortcut_name:/d" "$SSH_CONFIG_FILE"
-                echo "SSH command removed for $shortcut_name."
-            else
-                echo "No SSH command found for $shortcut_name."
-            fi
+            sed -i '' "/^$shortcut_name:/d" "$SSH_CONFIG_FILE"
+            echo "SSH command removed for $shortcut_name."
             ;;
         execute)
-            local ssh_command=$(grep "^$shortcut_name:" "$SSH_CONFIG_FILE" | cut -d ':' -f 2)
-            if [[ ! -z "$ssh_command" ]]; then
+            ssh_command=$(grep "^$shortcut_name:" "$SSH_CONFIG_FILE" | cut -d ':' -f 2-)
+            if [[ -n "$ssh_command" ]]; then
+                echo "Executing SSH command for $shortcut_name..."
                 eval "$ssh_command"
             else
                 echo "No SSH command found for $shortcut_name."
@@ -197,6 +225,7 @@ manage_ssh() {
             ;;
     esac
 }
+
 
 # Function to export configuration
 export_config() {
@@ -258,7 +287,7 @@ display_info() {
     done < "$CONFIG_FILE"
 }
 
-# Function to execute a shortcut
+# Function to execute a shortcut without automatically initiating SSH
 execute_shortcut() {
     local shortcut_name=$1
 
@@ -280,13 +309,6 @@ execute_shortcut() {
         if [[ ! -z "$description" ]]; then
             echo "Your setup is: $description"
         fi
-
-        # Execute SSH command if it exists
-        local ssh_command=$(grep "^$shortcut_name:" "$SSH_CONFIG_FILE" | cut -d ':' -f 2)
-        if [[ ! -z "$ssh_command" ]]; then
-            echo "Executing SSH command for $shortcut_name..."
-            eval "$ssh_command"
-        fi
     else
         echo "Shortcut '$shortcut_name' does not exist or is not executable."
     fi
@@ -302,58 +324,78 @@ get_current_shortcut() {
     fi
 }
 
-# Function to get the current shortcut
-get_current_shortcut() {
-    local current_shortcut_path=$(readlink "$SHORTCUT_DIR/current")
-    if [[ -n "$current_shortcut_path" && -f "$current_shortcut_path" ]]; then
-        basename "$current_shortcut_path"
-    else
-        echo ""
-    fi
-}
-
-# Extend main logic to handle new features
+# Main logic
 case "$1" in
-    add)
-        current_shortcut=$(get_current_shortcut)
-        if [[ -z "$current_shortcut" ]]; then
-            echo "No active shortcut selected."
-        else
-            # Pass the active shortcut name and the entire SSH command as arguments
-            manage_ssh add "$current_shortcut" "ssh ${*:2}"
-        fi
-        ;;
-    remove)
-        current_shortcut=$(get_current_shortcut)
-        if [[ -z "$current_shortcut" ]]; then
-            echo "No active shortcut selected."
-        else
-            # Remove the SSH command for the current shortcut
-            manage_ssh remove "$current_shortcut"
-        fi
-        ;;
-    ssh)
+add)
+    current_shortcut=$(get_current_shortcut)
+    if [[ -z "$current_shortcut" ]]; then
+        echo "No active shortcut selected."
+    else
+        manage_ssh add "$current_shortcut" "${*:2}"
+    fi
+    ;;
+remove)
+    current_shortcut=$(get_current_shortcut)
+    if [[ -z "$current_shortcut" ]]; then
+        echo "No active shortcut selected."
+    else
+        manage_ssh remove "$current_shortcut"
+    fi
+    ;;
+ssh)
+    # If 'ssh' is explicitly called, execute the SSH command for the current or specified shortcut
+    current_shortcut=$(get_current_shortcut)
+    if [[ ! -z "$2" ]]; then
+        # If a specific shortcut name is provided with ssh
         manage_ssh execute "$2"
-        ;;
-    export)
-        export_config "$2"
-        ;;
-    import)
-        import_config "$2"
-        ;;
-    create)
-        create_shortcut "$2"
-        ;;
-    update)
-        update_shortcut "$2"
-        ;;
-    info)
-        display_info
-        ;;
-    help)
-        display_help
-        ;;
+    elif [[ ! -z "$current_shortcut" ]]; then
+        # If 'ssh' is called without a shortcut name, use the current shortcut
+        manage_ssh execute "$current_shortcut"
+    else
+        echo "No active or specified shortcut to SSH into."
+    fi
+    ;;
+export)
+    export_config "$2"
+    ;;
+import)
+    import_config "$2"
+    ;;
+create)
+    create_shortcut "$2"
+    ;;
+update)
+    update_shortcut "$2"
+    ;;
+info)
+    display_info
+    ;;
+help)
+    display_help
+    ;;
+
     *)
-        execute_shortcut "$1"
+        if [[ "$2" == "ssh" ]]; then
+            # Execute SSH command for the given shortcut name or the current shortcut
+            shortcut_name="$1"
+            # Check if the shortcut exists before trying to execute it
+            if [[ -z "$shortcut_name" || ! -f "$SHORTCUT_DIR/$shortcut_name" ]]; then
+                echo "Shortcut '$shortcut_name' does not exist."
+                exit 1
+            fi
+            execute_shortcut "$shortcut_name"
+            manage_ssh execute "$shortcut_name"
+        else
+            execute_shortcut "$1"
+            # If only 'switch ssh' is called without specifying a shortcut name
+            if [[ "$1" == "ssh" ]]; then
+                current_shortcut=$(get_current_shortcut)
+                if [[ -n "$current_shortcut" ]]; then
+                    manage_ssh execute "$current_shortcut"
+                else
+                    echo "No active shortcut selected for SSH."
+                fi
+            fi
+        fi
         ;;
 esac
