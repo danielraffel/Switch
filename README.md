@@ -139,7 +139,8 @@ To completely remove switch from your system:
 2. Delete the repo you cloned `/path/to/switch`
 3. Remove the PATH `export PATH="/usr/local/bin:$PATH"` from `.bashrc` and/or `.zshrc`
 4. Remove the file with your configurations `~/.switch_config`
-5. Remove the directory with your shortcuts `~/.switch_shortcuts`
+6. Remove the file with your SSH shortcuts `~/.switch_ssh_config`
+7. Remove the directory with your shortcuts `~/.switch_shortcuts`
 
 ## Note
 This script is specifically designed for managing Google Cloud configurations on macOS. It should be trivial to adapt to other platforms. Please ensure you have the necessary permissions to modify `/usr/local/bin` and other system directories.
