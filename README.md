@@ -112,6 +112,10 @@ Execute the SSH command associated with the current active shortcut so you can S
 ```
 switch ssh
 ```
+Alternatively, when switching shortcuts execute the SSH command associated with the shortcut by appending ssh.
+```
+switch myShortcut ssh
+```
 Remove the SSH command from the current active shortcut.
 ```
 switch remove
