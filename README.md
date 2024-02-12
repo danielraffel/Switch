@@ -145,6 +145,7 @@ To completely remove switch from your system:
 4. Remove the file with your configurations `~/.switch_config`
 6. Remove the file with your SSH shortcuts `~/.switch_ssh_config`
 7. Remove the directory with your shortcuts `~/.switch_shortcuts`
+8. In the event you exported your switch configs (and later re-imported them) you will have a timestamped backup directory `~/.switch_backup_*date*`
 
 ## Note
 This script is specifically designed for managing Google Cloud configurations on macOS. It should be trivial to adapt to other platforms. Please ensure you have the necessary permissions to modify `/usr/local/bin` and other system directories.
