@@ -226,19 +226,58 @@ manage_ssh() {
     esac
 }
 
-
 # Function to export configuration
 export_config() {
-    local export_path=${1:-$PWD/switch_export.tar.gz}
-    tar -czf "$export_path" "$CONFIG_FILE" "$SSH_CONFIG_FILE"
-    echo "Configuration exported to $export_path"
+    local filename="$1"
+    # Directly use the provided filename without altering the path
+    # Check if the filename ends with .tar.gz, if not, append it.
+    if [[ "$filename" != *.tar.gz ]]; then
+        filename="${filename}.tar.gz"
+        echo "Filename was updated to include the .tar.gz extension: $filename"
+    fi
+
+    # Ensure the directory for the export path exists or create it
+    local export_dir=$(dirname "$filename")
+    mkdir -p "$export_dir"
+
+    # Adjust the tar command to correctly reference the paths of the files to be included
+    # Assuming .switch_config, .switch_ssh_config, and the directory .switch_shortcuts are located directly in the user's home directory
+    local config_path="${CONFIG_FILE#$HOME/}"  # Removes $HOME/ prefix from CONFIG_FILE path
+    local ssh_config_path="${SSH_CONFIG_FILE#$HOME/}"  # Removes $HOME/ prefix from SSH_CONFIG_FILE path
+    local shortcuts_dir="${SHORTCUT_DIR#$HOME/}"  # Removes $HOME/ prefix from SHORTCUT_DIR path
+
+    # Create the tarball at the specified path
+    tar -czf "$filename" -C "$HOME" "$config_path" "$ssh_config_path" "$shortcuts_dir"
+    echo "Configuration and shortcuts exported to $filename"
 }
 
-# Function to import configuration
+# Function to import configuration including shortcuts
 import_config() {
-    local import_path=$1
-    tar -xzf "$import_path" -C "$HOME"
-    echo "Configuration imported from $import_path"
+    local import_path="$1"
+    if [[ ! -f "$import_path" ]]; then
+        echo "The specified import file does not exist: $import_path"
+        return
+    fi
+
+    echo "Backing up existing configurations..."
+    local backup_dir="$HOME/.switch_backup_$(date +%Y%m%d_%H%M%S)"
+    mkdir -p "$backup_dir"
+    if [[ -d "$SHORTCUT_DIR" ]]; then
+        mv "$SHORTCUT_DIR" "$backup_dir/" && echo "Shortcuts backed up to $backup_dir"
+    fi
+    if [[ -f "$CONFIG_FILE" ]]; then
+        mv "$CONFIG_FILE" "$backup_dir/" && echo "Config file backed up to $backup_dir"
+    fi
+    if [[ -f "$SSH_CONFIG_FILE" ]]; then
+        mv "$SSH_CONFIG_FILE" "$backup_dir/" && echo "SSH config backed up to $backup_dir"
+    fi
+
+    echo "Importing configurations from $import_path..."
+    if tar -xzf "$import_path" -C "$HOME"; then
+        echo "Configuration and shortcuts imported successfully."
+    else
+        echo "Error importing configurations. Please check the import file and try again."
+    fi
 }
 
 # Function to display_info 
