@@ -34,14 +34,19 @@ add_to_path
 # Function to display help
 display_help() {
     echo "Switch - Quickly Change Google Cloud Configurations"
-    echo "Usage: "
+    echo "Usage:"
     echo "  switch create [name] - Create a new shortcut"
     echo "  switch update [name] - Update an existing shortcut"
     echo "  switch remove [name] - Remove an existing shortcut"
-    echo "  switch info - Display information about all shortcuts (active shortcut is marked with an asterisk)"
+    echo "  switch info - Display information about all shortcuts"
     echo "  switch [name] - Activate the specified shortcut"
     echo "  switch add [SSH command] - Add an SSH command to the current active shortcut"
     echo "  switch remove - Remove the SSH command from the current active shortcut"
+    echo "  switch ssh [cmd] [shortcut] - Show and execute the SSH command for the current or specified shortcut"
+    echo "  switch ssh cmd - Show the SSH command for the current shortcut"
+    echo "  switch ssh cmd [shortcut] - Show the SSH command for the specified shortcut"
+    echo "  switch keygen - Remove the old host key for the current SSH command's IP address"
+    echo "  switch help - Display this help message"
 }
 
 # Enhanced for flexible yes/no input
@@ -365,59 +370,108 @@ get_current_shortcut() {
 
 # Main logic
 case "$1" in
-add)
-    current_shortcut=$(get_current_shortcut)
-    if [[ -z "$current_shortcut" ]]; then
-        echo "No active shortcut selected."
-    else
-        manage_ssh add "$current_shortcut" "${*:2}"
-    fi
-    ;;
-remove)
-    current_shortcut=$(get_current_shortcut)
-    if [[ -z "$current_shortcut" ]]; then
-        echo "No active shortcut selected."
-    else
-        manage_ssh remove "$current_shortcut"
-    fi
-    ;;
-ssh)
-    # If 'ssh' is explicitly called, execute the SSH command for the current or specified shortcut
-    current_shortcut=$(get_current_shortcut)
-    if [[ ! -z "$2" ]]; then
-        # If a specific shortcut name is provided with ssh
-        manage_ssh execute "$2"
-    elif [[ ! -z "$current_shortcut" ]]; then
-        # If 'ssh' is called without a shortcut name, use the current shortcut
-        manage_ssh execute "$current_shortcut"
-    else
-        echo "No active or specified shortcut to SSH into."
-    fi
-    ;;
-export)
-    export_config "$2"
-    ;;
-import)
-    import_config "$2"
-    ;;
-create)
-    create_shortcut "$2"
-    ;;
-update)
-    update_shortcut "$2"
-    ;;
-info)
-    display_info
-    ;;
-help)
-    display_help
-    ;;
-
+    add)
+        current_shortcut=$(get_current_shortcut)
+        if [[ -z "$current_shortcut" ]]; then
+            echo "No active shortcut selected."
+        else
+            manage_ssh add "$current_shortcut" "${*:2}"
+        fi
+        ;;
+    remove)
+        current_shortcut=$(get_current_shortcut)
+        if [[ -z "$current_shortcut" ]]; then
+            echo "No active shortcut selected."
+        else
+            manage_ssh remove "$current_shortcut"
+        fi
+        ;;
+    ssh)
+        current_shortcut=$(get_current_shortcut)
+        if [[ "$2" == "cmd" ]]; then
+            # If 'cmd' is specified, show the command and wait for confirmation
+            if [[ -z "$3" ]]; then
+                # If no shortcut is specified, use the current shortcut
+                if [[ -z "$current_shortcut" ]]; then
+                    echo "No active shortcut selected."
+                    exit 1
+                fi
+                ssh_command=$(grep "^$current_shortcut:" "$SSH_CONFIG_FILE" | cut -d ':' -f 2)
+                echo "SSH Command for current shortcut '$current_shortcut':"
+            else
+                # If a specific shortcut name is provided
+                ssh_command=$(grep "^$3:" "$SSH_CONFIG_FILE" | cut -d ':' -f 2)
+                if [[ -z "$ssh_command" ]]; then
+                    echo "No SSH command found for shortcut '$3'."
+                    exit 1
+                fi
+                echo "SSH Command for '$3':"
+            fi
+            
+            echo "$ssh_command"
+            read -p "Press Enter to execute the command..."
+            eval "$ssh_command"  # Execute the command
+        else
+            # Existing logic for executing SSH command
+            if [[ ! -z "$2" ]]; then
+                manage_ssh execute "$2"
+            elif [[ ! -z "$current_shortcut" ]]; then
+                manage_ssh execute "$current_shortcut"
+            else
+                echo "No active or specified shortcut to SSH into."
+            fi
+        fi
+        ;;
+    export)
+        export_config "$2"
+        ;;
+    import)
+        import_config "$2"
+        ;;
+    create)
+        create_shortcut "$2"
+        ;;
+    update)
+        update_shortcut "$2"
+        ;;
+    info)
+        display_info
+        ;;
+    help)
+        display_help
+        ;;
+    keygen)
+        current_shortcut=$(get_current_shortcut)
+        if [[ -z "$current_shortcut" ]]; then
+            echo "No active shortcut selected."
+            exit 1
+        fi
+        
+        # Extract the SSH command for the current shortcut
+        ssh_command=$(grep "^$current_shortcut:" "$SSH_CONFIG_FILE" | cut -d ':' -f 2)
+        
+        if [[ -z "$ssh_command" ]]; then
+            echo "No SSH command found for the current shortcut."
+            exit 1
+        fi
+        
+        # Extract the IP address from the SSH command
+        ip_address=$(echo "$ssh_command" | grep -o '@[^ ]*' | cut -d '@' -f 2)
+        
+        if [[ -z "$ip_address" ]]; then
+            echo "No IP address found in the SSH command."
+            exit 1
+        fi
+        
+        # Run ssh-keygen -R [IPADDRESS]
+        echo "Removing old host key for $ip_address..."
+        ssh-keygen -R "$ip_address"
+        echo "Old host key for $ip_address removed successfully."
+        ;;
     *)
+        # Existing logic for executing shortcuts
         if [[ "$2" == "ssh" ]]; then
-            # Execute SSH command for the given shortcut name or the current shortcut
             shortcut_name="$1"
-            # Check if the shortcut exists before trying to execute it
             if [[ -z "$shortcut_name" || ! -f "$SHORTCUT_DIR/$shortcut_name" ]]; then
                 echo "Shortcut '$shortcut_name' does not exist."
                 exit 1
@@ -426,7 +480,6 @@ help)
             manage_ssh execute "$shortcut_name"
         else
             execute_shortcut "$1"
-            # If only 'switch ssh' is called without specifying a shortcut name
             if [[ "$1" == "ssh" ]]; then
                 current_shortcut=$(get_current_shortcut)
                 if [[ -n "$current_shortcut" ]]; then
