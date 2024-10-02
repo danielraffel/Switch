@@ -20,6 +20,8 @@ Once you've signed in, you'll be redirected back to the terminal and your new ac
 - Display information about all configured shortcuts, including an asterisk (*) next to the currently active shortcut.
 - Execute shortcuts to quickly switch between Google Cloud configurations associated with your Google accounts.
 - Manage SSH commands for each shortcut, allowing easy SSH access to VMs associated with each shortcut.
+- Display the full SSH command for a shortcut.
+- Easily reset the host key for a shortcut's SSH command.
 - Export and import Switch configurations, making the setup portable across different machines.
 
 ## Installation
@@ -116,9 +118,18 @@ Alternatively, when switching shortcuts execute the SSH command associated with 
 ```
 switch myShortcut ssh
 ```
-Remove the SSH command from the current active shortcut.
+
+### Display SSH Command
+Show the full SSH command associated with the current or specified shortcut.
 ```
-switch remove
+switch ssh cmd
+switch ssh cmd [shortcut]
+```
+
+### Remove Old Host Key
+Run ssh-keygen to remove the old host key for the SSH command's IP address.
+```
+switch keygen
 ```
 
 ### Export/Import Configuration
@@ -146,6 +157,3 @@ To completely remove switch from your system:
 6. Remove the file with your SSH shortcuts `~/.switch_ssh_config`
 7. Remove the directory with your shortcuts `~/.switch_shortcuts`
 8. In the event you exported your switch configs (and later re-imported them) you will have a timestamped backup directory `~/.switch_backup_*date*`
-
-## Note
-This script is specifically designed for managing Google Cloud configurations on macOS. It should be trivial to adapt to other platforms. Please ensure you have the necessary permissions to modify `/usr/local/bin` and other system directories.
